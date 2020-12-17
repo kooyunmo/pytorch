@@ -656,7 +656,8 @@ class DeviceCachingAllocator {
     if (set_fraction && total_allocated_memory + size > allowed_memory_maximum) {
       p.err = cudaErrorMemoryAllocation;
     } else {
-      p.err = cudaMalloc(&ptr, size);
+      //p.err = cudaMalloc(&ptr, size);
+      p.err = cudaMallocManaged(&ptr, size);
     }
 
     if (p.err != cudaSuccess) {
@@ -966,7 +967,8 @@ struct CudaCachingAllocator : public Allocator {
     C10_CUDA_CHECK(cudaGetDevice(&device));
     void* r = nullptr;
     if (forceUncachedAllocator()) {
-      C10_CUDA_CHECK(cudaMalloc(&r, size));
+      //C10_CUDA_CHECK(cudaMalloc(&r, size));
+      C10_CUDA_CHECK(cudaMallocManaged(&r, size));
       return {r, r, &uncached_delete, Device(DeviceType::CUDA, device)};
     }
     if (size != 0) {

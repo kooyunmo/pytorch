@@ -271,3 +271,6 @@ TAGS
 
 # bazel symlinks
 bazel-*
+
+# log file
+*.log

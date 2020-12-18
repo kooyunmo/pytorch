@@ -109,6 +109,10 @@ C10_CUDA_API void* raw_alloc(size_t nbytes);
 C10_CUDA_API void* raw_alloc_with_stream(size_t nbytes, cudaStream_t stream);
 C10_CUDA_API void raw_delete(void* ptr);
 
+C10_CUDA_API void set_prefetch_flag();
+C10_CUDA_API uint64_t unset_prefetch_flag();
+C10_CUDA_API void prefetch_block_async(cudaStream_t stream, uint64_t num_blocks_to_prefetch);
+
 C10_CUDA_API Allocator* get();
 C10_CUDA_API void init(int device_count);
 C10_CUDA_API void setMemoryFraction(double fraction, int device);

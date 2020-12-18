@@ -26,6 +26,13 @@
 #include <pthread.h>
 #endif
 
+#include <torch/torch.h>
+#include <torch/script.h>
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <iostream>
+
 using namespace torch;
 
 THCState *state = nullptr;
@@ -505,6 +512,48 @@ PyObject * THCPModule_getCurrentBlasHandle_wrap(PyObject *self, PyObject *noargs
   END_HANDLE_TH_ERRORS
 }
 
+///////////////////////////////////////////////////////////////////
+// Function for UVM handle                                       //
+///////////////////////////////////////////////////////////////////
+PyObject * THCPModule_memPrefetchAsync_wrap(PyObject *_unused, PyObject *args)
+{
+  HANDLE_TH_ERRORS
+  PyObject *py_stream_o = nullptr;
+  PyObject *num_blocks_o = nullptr; 
+  if (!PyArg_ParseTuple(args, "OO", &py_stream_o, &num_blocks_o)) {
+    THPUtils_invalidArguments(
+        args,
+        nullptr,
+        "caching_allocator_alloc",
+        1,
+        "(intptr_t stream, ssize_t size);");
+    return nullptr;
+  }
+
+  ssize_t num_blocks = PyLong_AsSsize_t(num_blocks_o);
+  cudaStream_t stream = static_cast<cudaStream_t>(PyLong_AsVoidPtr(py_stream_o));
+  c10::cuda::CUDACachingAllocator::prefetch_block_async(stream, num_blocks);
+
+  Py_RETURN_NONE;
+  END_HANDLE_TH_ERRORS
+}
+
+PyObject * THCPModule_enablePrefetchRecording_wrap(PyObject *_unused, PyObject *noargs)
+{
+  HANDLE_TH_ERRORS
+  c10::cuda::CUDACachingAllocator::set_prefetch_flag();
+  Py_RETURN_NONE;
+  END_HANDLE_TH_ERRORS
+}
+
+PyObject * THCPModule_disablePrefetchRecording_wrap(PyObject *_unused, PyObject *noargs)
+{
+  HANDLE_TH_ERRORS
+  return PyLong_FromUnsignedLongLong(
+    c10::cuda::CUDACachingAllocator::unset_prefetch_flag());
+  END_HANDLE_TH_ERRORS
+}
+
 static struct PyMethodDef _THCPModule_methods[] = {
   {"_cuda_init",        THCPModule_initExtension,    METH_NOARGS,  nullptr},
   {"_cuda_setDevice",   THCPModule_setDevice_wrap,   METH_O,       nullptr},
@@ -544,6 +593,9 @@ static struct PyMethodDef _THCPModule_methods[] = {
   {"_nccl_all_gather", THCPModule_nccl_all_gather, METH_VARARGS, nullptr},
   {"_nccl_reduce_scatter", THCPModule_nccl_reduce_scatter, METH_VARARGS, nullptr},
 #endif
+  {"_cuda_memPrefetchAsync", THCPModule_memPrefetchAsync_wrap, METH_VARARGS, nullptr},
+  {"_cuda_enablePrefetchRecording", THCPModule_enablePrefetchRecording_wrap, METH_NOARGS, nullptr},
+  {"_cuda_disablePrefetchRecording", THCPModule_disablePrefetchRecording_wrap, METH_NOARGS, nullptr},
   {nullptr}
 };
 

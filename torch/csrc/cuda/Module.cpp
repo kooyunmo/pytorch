@@ -554,6 +554,14 @@ PyObject * THCPModule_disablePrefetchRecording_wrap(PyObject *_unused, PyObject 
   END_HANDLE_TH_ERRORS
 }
 
+PyObject * THCPModule_clearPrefetchIdx_wrap(PyObject *_unused, PyObject *noargs)
+{
+  HANDLE_TH_ERRORS
+  c10::cuda::CUDACachingAllocator::clear_prefetch_idx();
+  Py_RETURN_NONE;
+  END_HANDLE_TH_ERRORS
+}
+
 static struct PyMethodDef _THCPModule_methods[] = {
   {"_cuda_init",        THCPModule_initExtension,    METH_NOARGS,  nullptr},
   {"_cuda_setDevice",   THCPModule_setDevice_wrap,   METH_O,       nullptr},
@@ -596,6 +604,7 @@ static struct PyMethodDef _THCPModule_methods[] = {
   {"_cuda_memPrefetchAsync", THCPModule_memPrefetchAsync_wrap, METH_VARARGS, nullptr},
   {"_cuda_enablePrefetchRecording", THCPModule_enablePrefetchRecording_wrap, METH_NOARGS, nullptr},
   {"_cuda_disablePrefetchRecording", THCPModule_disablePrefetchRecording_wrap, METH_NOARGS, nullptr},
+  {"_cuda_clearPrefetchIdx", THCPModule_clearPrefetchIdx_wrap, METH_NOARGS, nullptr},
   {nullptr}
 };
 

@@ -976,6 +976,11 @@ class THCCachingAllocator {
     }
     prefetch_idx += num_blocks_to_prefetch;
   }
+
+  void clear_prefetch_idx() {
+    TORCH_INTERNAL_ASSERT(!is_recording_prefetch_block);
+    prefetch_idx = 0;
+  }
 };
 
 THCCachingAllocator caching_allocator;
@@ -1170,6 +1175,10 @@ uint64_t unset_prefetch_flag() {
 
 void prefetch_block_async(cudaStream_t stream, uint64_t num_blocks_to_prefetch) {
   caching_allocator.prefetch_block_async(stream, num_blocks_to_prefetch);
+}
+
+void clear_prefetch_idx() {
+  caching_allocator.clear_prefetch_idx();
 }
 
 } // namespace CUDACachingAllocator

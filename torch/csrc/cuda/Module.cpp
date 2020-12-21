@@ -529,9 +529,15 @@ PyObject * THCPModule_memPrefetchAsync_wrap(PyObject *_unused, PyObject *args)
         "(intptr_t stream, ssize_t size);");
     return nullptr;
   }
+  THPUtils_assert(PyLong_Check(py_stream_o), "invalid stream");
+  uint64_t bits = PyLong_AsUnsignedLongLong(py_stream_o);
+  if (bits == static_cast<uint64_t>(-1) && PyErr_Occurred()) {
+    throw python_error();
+  }
+  auto stream = at::cuda::CUDAStream::unpack(bits);
 
   ssize_t num_blocks = PyLong_AsSsize_t(num_blocks_o);
-  cudaStream_t stream = static_cast<cudaStream_t>(PyLong_AsVoidPtr(py_stream_o));
+  //cudaStream_t stream = static_cast<cudaStream_t>(PyLong_AsVoidPtr(py_stream_o));
   c10::cuda::CUDACachingAllocator::prefetch_block_async(stream, num_blocks);
 
   Py_RETURN_NONE;

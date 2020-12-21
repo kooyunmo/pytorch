@@ -967,13 +967,19 @@ class THCCachingAllocator {
     return res;
   }
 
-  void prefetch_block_async(cudaStream_t stream, uint64_t num_blocks_to_prefetch) {
+  void prefetch_block_async(cuda::CUDAStream stream, uint64_t num_blocks_to_prefetch) {
     TORCH_INTERNAL_ASSERT(!is_recording_prefetch_block);
     TORCH_INTERNAL_ASSERT(prefetch_block_pool.size() >= prefetch_idx + num_blocks_to_prefetch);
     for (int i = prefetch_idx; i < prefetch_idx + num_blocks_to_prefetch; i++) {
       Block* block = prefetch_block_pool.at(i);
-      cudaMemPrefetchAsync(block->ptr, block->size, block->device, block->stream);
+      if (stream.stream() != block->stream) {
+        // ignore uses on the allocation stream, since those don't require any
+        // special synchronization
+        block->stream_uses.insert(stream);
+      }
+      cudaMemPrefetchAsync(block->ptr, block->size, block->device, stream.stream());
     }
+    //std::cout << "stream: " << stream.stream() << std::endl;
     prefetch_idx += num_blocks_to_prefetch;
   }
 
@@ -1173,7 +1179,7 @@ uint64_t unset_prefetch_flag() {
   return num_allocated_blocks;
 }
 
-void prefetch_block_async(cudaStream_t stream, uint64_t num_blocks_to_prefetch) {
+void prefetch_block_async(cuda::CUDAStream stream, uint64_t num_blocks_to_prefetch) {
   caching_allocator.prefetch_block_async(stream, num_blocks_to_prefetch);
 }
 

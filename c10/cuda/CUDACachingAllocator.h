@@ -111,7 +111,7 @@ C10_CUDA_API void raw_delete(void* ptr);
 
 C10_CUDA_API void set_prefetch_flag();
 C10_CUDA_API uint64_t unset_prefetch_flag();
-C10_CUDA_API void prefetch_block_async(cudaStream_t stream, uint64_t num_blocks_to_prefetch);
+C10_CUDA_API void prefetch_block_async(CUDAStream stream, uint64_t num_blocks_to_prefetch);
 C10_CUDA_API void clear_prefetch_idx();
 
 C10_CUDA_API Allocator* get();

@@ -972,7 +972,7 @@ class THCCachingAllocator {
     TORCH_INTERNAL_ASSERT(prefetch_block_pool.size() >= prefetch_idx + num_blocks_to_prefetch);
     for (int i = prefetch_idx; i < prefetch_idx + num_blocks_to_prefetch; i++) {
       Block* block = prefetch_block_pool.at(i);
-      cudaMemPrefetchAsync(block->ptr, block->size, block->device, stream);
+      cudaMemPrefetchAsync(block->ptr, block->size, block->device, block->stream);
     }
     prefetch_idx += num_blocks_to_prefetch;
   }
